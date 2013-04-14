@@ -6,28 +6,40 @@ import os
 import random
 import re
 import sqlite3
+import sys
 import time
+import argparse
 
 
 _logger = logging.getLogger(__name__)
 
 
 class VisibliHexURLGrab(object):
-    def __init__(self):
+    def __init__(self, sequential=True):
         self.db = sqlite3.connect('visibli.db')
         self.db.execute('PRAGMA journal_mode=WAL')
 
         with self.db:
             self.db.execute('''CREATE TABLE IF NOT EXISTS visibli_hex
-            (shortcode BLOB PRIMARY KEY, url TEXT)
+            (shortcode BLOB PRIMARY KEY, url TEXT, not_exist INTEGER)
             ''')
 
         self.http_client = http.client.HTTPConnection('links.sharedby.co')
         self.throttle_time = 1
+        self.sequential = sequential
+        self.seq_num = 0
 
     def new_shortcode(self):
         while True:
-            shortcode = os.urandom(3)
+            if self.sequential:
+                s = '{:06x}'.format(self.seq_num)
+                shortcode = base64.b16decode(s.encode(), casefold=True)
+                self.seq_num += 1
+
+                if self.seq_num > 0xffffff:
+                    raise Exception('No more short codes')
+            else:
+                shortcode = os.urandom(3)
 
             rows = self.db.execute('SELECT 1 FROM visibli_hex WHERE '
                 'shortcode = ? LIMIT 1', [shortcode])
@@ -42,6 +54,7 @@ class VisibliHexURLGrab(object):
 
     def fetch_url(self):
         shortcode = self.new_shortcode()
+
         shortcode_str = base64.b16encode(shortcode).lower().decode()
         path = '/links/{}'.format(shortcode_str)
 
@@ -54,7 +67,7 @@ class VisibliHexURLGrab(object):
         url = self.read_response(response)
 
         if not url:
-            _logger.debug('Got no url')
+            self.add_no_url(shortcode)
         else:
             self.add_url(shortcode, url)
 
@@ -92,11 +105,19 @@ class VisibliHexURLGrab(object):
     def add_url(self, shortcode, url):
         _logger.debug('Insert %s %s', shortcode, url)
         with self.db:
-            self.db.execute('INSERT INTO visibli_hex VALUES (?, ?)',
-                [shortcode, url])
+            self.db.execute('INSERT INTO visibli_hex VALUES (?, ?, ?)',
+                [shortcode, url, None])
 
+    def add_no_url(self, shortcode):
+        _logger.debug('Mark no url %s', shortcode)
+        with self.db:
+            self.db.execute('INSERT INTO visibli_hex VALUES (?, ?, ?)',
+                [shortcode, None, 1])
 
 if __name__ == '__main__':
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--sequential', action='store_true')
+    args = arg_parser.parse_args()
     logging.basicConfig(level=logging.DEBUG)
-    o = VisibliHexURLGrab()
+    o = VisibliHexURLGrab(sequential=args.sequential)
     o.run()
