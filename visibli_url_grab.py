@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 
 
 class VisibliHexURLGrab(object):
-    def __init__(self, sequential=True):
+    def __init__(self, sequential=True, sleep_time_max=2):
         self.db = sqlite3.connect('visibli.db')
         self.db.execute('PRAGMA journal_mode=WAL')
 
@@ -29,6 +29,7 @@ class VisibliHexURLGrab(object):
         self.seq_num = 0
         self.session_count = 0
         self.total_count = self.get_count() or 0
+        self.sleep_time_max = sleep_time_max
 
     def new_shortcode(self):
         while True:
@@ -52,7 +53,7 @@ class VisibliHexURLGrab(object):
         while True:
             self.fetch_url()
             self.session_count += 1
-            t = random.triangular(0, 2, 0)
+            t = random.triangular(0, self.sleep_time_max, 0)
             _logger.debug('Sleep %s, session count=%d, total=%d', t,
                 self.session_count, self.session_count + self.total_count)
             time.sleep(t)
@@ -130,7 +131,9 @@ class VisibliHexURLGrab(object):
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--sequential', action='store_true')
+    arg_parser.add_argument('--sleep-max', type=float, default=2.0)
     args = arg_parser.parse_args()
     logging.basicConfig(level=logging.DEBUG)
-    o = VisibliHexURLGrab(sequential=args.sequential)
+    o = VisibliHexURLGrab(sequential=args.sequential,
+        sleep_time_max=args.sleep_max)
     o.run()
