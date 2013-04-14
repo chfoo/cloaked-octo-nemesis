@@ -50,7 +50,9 @@ class VisibliHexURLGrab(object):
     def run(self):
         while True:
             self.fetch_url()
-            time.sleep(random.uniform(0.1, 2))
+            t = random.triangular(0, 2, 0)
+            _logger.debug('Sleep %s', t)
+            time.sleep(t)
 
     def fetch_url(self):
         shortcode = self.new_shortcode()
@@ -101,6 +103,10 @@ class VisibliHexURLGrab(object):
 
             self.throttle_time *= 2
             self.throttle_time = min(3600, self.throttle_time)
+        else:
+            self.throttle_time /= 2
+            self.throttle_time = min(600, self.throttle_time)
+            self.throttle_time = max(1, self.throttle_time)
 
     def add_url(self, shortcode, url):
         _logger.debug('Insert %s %s', shortcode, url)
