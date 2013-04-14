@@ -13,6 +13,5 @@ __pycache__
 build/
 dist/
 Manifest
-visibli.db
 visibli.db*
-
+visibli_url_grab.log*

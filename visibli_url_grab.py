@@ -1,15 +1,16 @@
+import argparse
 import base64
+import collections
+import gzip
 import html.parser
 import http.client
 import logging
+import logging.handlers
 import os
 import random
 import re
 import sqlite3
 import time
-import argparse
-import gzip
-import collections
 
 
 _logger = logging.getLogger(__name__)
@@ -66,9 +67,10 @@ class VisibliHexURLGrab(object):
                 continue
             self.session_count += 1
             t = random.triangular(0, self.sleep_time_max, 0)
-            _logger.debug('Sleep {:.3f}, session count={}, total={}, '
-                '{:.3f} u/s'.format(t, self.session_count,
-                    self.session_count + self.total_count, self.calc_avg()))
+            _logger.info('Session={}, total={}, {:.3f} u/s'.format(
+                self.session_count, self.session_count + self.total_count,
+                self.calc_avg()))
+            _logger.debug('Sleep {:.3f}'.format(t))
             time.sleep(t)
 
     def fetch_url(self):
@@ -89,6 +91,8 @@ class VisibliHexURLGrab(object):
             self.add_no_url(shortcode)
         else:
             self.add_url(shortcode, url)
+
+        _logger.info('Got url %s', url)
 
         self.throttle(response.status)
 
@@ -161,7 +165,23 @@ if __name__ == '__main__':
     arg_parser.add_argument('--sequential', action='store_true')
     arg_parser.add_argument('--sleep-max', type=float, default=2.0)
     args = arg_parser.parse_args()
-    logging.basicConfig(level=logging.DEBUG)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(
+        logging.Formatter('%(levelname)s %(message)s'))
+    root_logger.addHandler(console)
+
+    file_log = logging.handlers.RotatingFileHandler('visibli_url_grab.log',
+        maxBytes=1048576, backupCount=9)
+    file_log.setLevel(logging.DEBUG)
+    file_log.setFormatter(logging.Formatter(
+        '%(asctime)s %(name)s:%(lineno)d %(levelname)s %(message)s'))
+    root_logger.addHandler(file_log)
+
     o = VisibliHexURLGrab(sequential=args.sequential,
         sleep_time_max=args.sleep_max)
     o.run()
