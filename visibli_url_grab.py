@@ -9,6 +9,7 @@ import sqlite3
 import time
 import argparse
 import gzip
+import collections
 
 
 _logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class VisibliHexURLGrab(object):
             'User-Agent': 'ZGDBGLQ (gzip)',
             'Accept-Encoding': 'gzip',
         }
+        self.average_deque = collections.deque(maxlen=100)
 
     def new_shortcode(self):
         while True:
@@ -64,8 +66,9 @@ class VisibliHexURLGrab(object):
                 continue
             self.session_count += 1
             t = random.triangular(0, self.sleep_time_max, 0)
-            _logger.debug('Sleep %s, session count=%d, total=%d', t,
-                self.session_count, self.session_count + self.total_count)
+            _logger.debug('Sleep {:.3f}, session count={}, total={}, '
+                '{:.3f} u/s'.format(t, self.session_count,
+                    self.session_count + self.total_count, self.calc_avg()))
             time.sleep(t)
 
     def fetch_url(self):
@@ -141,6 +144,17 @@ class VisibliHexURLGrab(object):
         for row in self.db.execute('SELECT COUNT(ROWID) FROM visibli_hex '
         'LIMIT 1'):
             return int(row[0])
+
+    def calc_avg(self):
+        self.average_deque.append((self.session_count, time.time()))
+
+        try:
+            avg = ((self.session_count - self.average_deque[0][0])
+                / (time.time() - self.average_deque[0][1]))
+        except ArithmeticError:
+            avg = 0
+
+        return avg
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
