@@ -6,7 +6,6 @@ import os
 import random
 import re
 import sqlite3
-import sys
 import time
 import argparse
 
@@ -28,6 +27,8 @@ class VisibliHexURLGrab(object):
         self.throttle_time = 1
         self.sequential = sequential
         self.seq_num = 0
+        self.session_count = 0
+        self.total_count = self.get_count() or 0
 
     def new_shortcode(self):
         while True:
@@ -50,8 +51,10 @@ class VisibliHexURLGrab(object):
     def run(self):
         while True:
             self.fetch_url()
+            self.session_count += 1
             t = random.triangular(0, 2, 0)
-            _logger.debug('Sleep %s', t)
+            _logger.debug('Sleep %s, session count=%d, total=%d', t,
+                self.session_count, self.session_count + self.total_count)
             time.sleep(t)
 
     def fetch_url(self):
@@ -118,6 +121,11 @@ class VisibliHexURLGrab(object):
         with self.db:
             self.db.execute('INSERT INTO visibli_hex VALUES (?, ?, ?)',
                 [shortcode, None, 1])
+
+    def get_count(self):
+        for row in self.db.execute('SELECT COUNT(ROWID) FROM visibli_hex '
+        'LIMIT 1'):
+            return int(row[0])
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
