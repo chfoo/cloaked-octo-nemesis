@@ -8,6 +8,7 @@ import re
 import sqlite3
 import time
 import argparse
+import gzip
 
 
 _logger = logging.getLogger(__name__)
@@ -30,6 +31,10 @@ class VisibliHexURLGrab(object):
         self.session_count = 0
         self.total_count = self.get_count() or 0
         self.sleep_time_max = sleep_time_max
+        self.headers = {
+            'User-Agent': 'ZGDBGLQ (gzip)',
+            'Accept-Encoding': 'gzip',
+        }
 
     def new_shortcode(self):
         while True:
@@ -66,7 +71,7 @@ class VisibliHexURLGrab(object):
 
         _logger.info('Begin fetch URL %s', path)
 
-        self.http_client.request('GET', path)
+        self.http_client.request('GET', path, headers=self.headers)
 
         response = self.http_client.getresponse()
 
@@ -84,6 +89,10 @@ class VisibliHexURLGrab(object):
 
         data = response.read()
         assert isinstance(data, bytes)
+
+        if response.getheader('Content-Encoding') == 'gzip':
+            _logger.debug('Got gzip data')
+            data = gzip.decompress(data)
 
         if response.status == 301:
             url = response.getheader('Location')
