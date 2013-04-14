@@ -56,7 +56,12 @@ class VisibliHexURLGrab(object):
 
     def run(self):
         while True:
-            self.fetch_url()
+            try:
+                self.fetch_url()
+            except http.client.HTTPException:
+                _logger.exception('Got an http error.')
+                time.sleep(120)
+                continue
             self.session_count += 1
             t = random.triangular(0, self.sleep_time_max, 0)
             _logger.debug('Sleep %s, session count=%d, total=%d', t,
