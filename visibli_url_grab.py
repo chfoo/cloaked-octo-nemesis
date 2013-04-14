@@ -88,8 +88,7 @@ class VisibliHexURLGrab(object):
             match = re.search(br'<iframe id="[^"]+" src="([^"]+)">', data)
 
             if not match:
-                _logger.warning('No iframe found')
-                return
+                raise Exception('No iframe found')
 
             url = match.group(1).decode()
             url = html.parser.HTMLParser().unescape(url)
