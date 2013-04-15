@@ -16,6 +16,10 @@ import time
 _logger = logging.getLogger(__name__)
 
 
+class UnexpectedResult(ValueError):
+    pass
+
+
 class VisibliHexURLGrab(object):
     def __init__(self, sequential=True, sleep_time_max=2):
         self.db = sqlite3.connect('visibli.db')
@@ -63,6 +67,7 @@ class VisibliHexURLGrab(object):
                 self.fetch_url()
             except http.client.HTTPException:
                 _logger.exception('Got an http error.')
+                self.http_client.close()
                 time.sleep(120)
                 continue
             self.session_count += 1
@@ -85,14 +90,17 @@ class VisibliHexURLGrab(object):
 
         response = self.http_client.getresponse()
 
-        url = self.read_response(response)
-
-        if not url:
-            self.add_no_url(shortcode)
+        try:
+            url = self.read_response(response)
+        except UnexpectedResult as e:
+            _logger.warn('Unexpected result %s', e)
         else:
-            self.add_url(shortcode, url)
+            if not url:
+                self.add_no_url(shortcode)
+            else:
+                self.add_url(shortcode, url)
 
-        _logger.info('Got url %s', url)
+            _logger.info('Got url %s', url)
 
         self.throttle(response.status)
 
@@ -119,6 +127,11 @@ class VisibliHexURLGrab(object):
             url = html.parser.HTMLParser().unescape(url)
 
             return url
+        elif response.status == 302:
+            return
+        else:
+            raise UnexpectedResult('Unexpected status {}'.format(
+                response.status))
 
     def throttle(self, status_code):
         if 400 <= status_code <= 499 or 500 <= status_code <= 999:
