@@ -1,3 +1,6 @@
+'''Export db to urlteam format'''
+# Copyright 2013 Christopher Foo <chris.foo@gmail.com>
+# Licensed under GPLv3. See COPYING.txt for details.
 import sqlite3
 import base64
 
