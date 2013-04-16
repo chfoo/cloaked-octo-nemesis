@@ -100,7 +100,7 @@ class VisibliHexURLGrab(object):
             else:
                 self.add_url(shortcode, url)
 
-            _logger.info('Got url %s', url)
+            _logger.info('Got url %s...', url[:40] if url else '(none)')
 
         self.throttle(response.status)
 
