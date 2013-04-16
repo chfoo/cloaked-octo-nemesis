@@ -72,9 +72,12 @@ class VisibliHexURLGrab(object):
                 continue
             self.session_count += 1
             t = random.triangular(0, self.sleep_time_max, 0)
-            _logger.info('Session={}, total={}, {:.3f} u/s'.format(
-                self.session_count, self.session_count + self.total_count,
-                self.calc_avg()))
+
+            if self.session_count % 10 == 0:
+                _logger.info('Session={}, total={}, {:.3f} u/s'.format(
+                    self.session_count, self.session_count + self.total_count,
+                    self.calc_avg()))
+
             _logger.debug('Sleep {:.3f}'.format(t))
             time.sleep(t)
 
@@ -84,7 +87,7 @@ class VisibliHexURLGrab(object):
         shortcode_str = base64.b16encode(shortcode).lower().decode()
         path = '/links/{}'.format(shortcode_str)
 
-        _logger.info('Begin fetch URL %s', path)
+        _logger.debug('Begin fetch URL %s', path)
 
         self.http_client.request('GET', path, headers=self.headers)
 
@@ -100,7 +103,8 @@ class VisibliHexURLGrab(object):
             else:
                 self.add_url(shortcode, url)
 
-            _logger.info('Got url %s...', url[:40] if url else '(none)')
+            _logger.info('%s->%s...', shortcode_str,
+                url[:30] if url else '(none)')
 
         self.throttle(response.status)
 
