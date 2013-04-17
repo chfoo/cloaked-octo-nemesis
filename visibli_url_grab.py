@@ -24,8 +24,9 @@ class UnexpectedResult(ValueError):
 
 
 class VisibliHexURLGrab(object):
-    def __init__(self, sequential=True, sleep_time_max=2):
-        self.db = sqlite3.connect('visibli.db')
+    def __init__(self, sequential=False, reverse_sequential=False,
+    sleep_time_max=2, database_dir=''):
+        self.db = sqlite3.connect(os.path.join(database_dir, 'visibli.db'))
         self.db.execute('PRAGMA journal_mode=WAL')
 
         with self.db:
@@ -36,7 +37,8 @@ class VisibliHexURLGrab(object):
         self.http_client = http.client.HTTPConnection('links.sharedby.co')
         self.throttle_time = 1
         self.sequential = sequential
-        self.seq_num = 0
+        self.reverse_sequential = reverse_sequential
+        self.seq_num = 0xffffff if self.reverse_sequential else 0
         self.session_count = 0
         self.total_count = self.get_count() or 0
         self.sleep_time_max = sleep_time_max
@@ -48,13 +50,20 @@ class VisibliHexURLGrab(object):
 
     def new_shortcode(self):
         while True:
-            if self.sequential:
+            if self.sequential or self.reverse_sequential:
                 s = '{:06x}'.format(self.seq_num)
                 shortcode = base64.b16decode(s.encode(), casefold=True)
-                self.seq_num += 1
 
-                if self.seq_num > 0xffffff:
-                    raise Exception('No more short codes')
+                if self.reverse_sequential:
+                    self.seq_num -= 1
+
+                    if self.seq_num < 0:
+                        raise Exception('No more short codes')
+                else:
+                    self.seq_num += 1
+
+                    if self.seq_num > 0xffffff:
+                        raise Exception('No more short codes')
             else:
                 shortcode = os.urandom(3)
 
@@ -183,19 +192,25 @@ class VisibliHexURLGrab(object):
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--sequential', action='store_true')
+    arg_parser.add_argument('--reverse-sequential', action='store_true')
     arg_parser.add_argument('--sleep-max', type=float, default=2.0)
+    arg_parser.add_argument('--quiet', action='store_true')
+    arg_parser.add_argument('--database-dir', default=os.getcwd())
+    arg_parser.add_argument('--log-dir', default=os.getcwd())
     args = arg_parser.parse_args()
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    console.setFormatter(
-        logging.Formatter('%(levelname)s %(message)s'))
-    root_logger.addHandler(console)
+    if not args.quiet:
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        console.setFormatter(
+            logging.Formatter('%(levelname)s %(message)s'))
+        root_logger.addHandler(console)
 
-    file_log = logging.handlers.RotatingFileHandler('visibli_url_grab.log',
+    log_filename = os.path.join(args.log_dir, 'visibli_url_grab.log')
+    file_log = logging.handlers.RotatingFileHandler(log_filename,
         maxBytes=1048576, backupCount=9)
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(logging.Formatter(
@@ -203,5 +218,6 @@ if __name__ == '__main__':
     root_logger.addHandler(file_log)
 
     o = VisibliHexURLGrab(sequential=args.sequential,
+        reverse_sequential=args.reverse_sequential,
         sleep_time_max=args.sleep_max)
     o.run()
