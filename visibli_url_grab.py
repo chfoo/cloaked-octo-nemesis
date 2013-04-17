@@ -219,5 +219,6 @@ if __name__ == '__main__':
 
     o = VisibliHexURLGrab(sequential=args.sequential,
         reverse_sequential=args.reverse_sequential,
+        database_dir=args.database_dir,
         sleep_time_max=args.sleep_max)
     o.run()
