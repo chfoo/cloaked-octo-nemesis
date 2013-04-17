@@ -1,1 +1,1 @@
-@daily sqlite3 DATABASE_PATH .dump > DUMP_LOCATION
+@daily sqlite3 /home/ubuntu/data/visibli_url_grab/visibli.db .dump > /home/ubuntu/data/visibli_url_grab/visibli.db.dump.sql
