@@ -47,7 +47,6 @@ class VisibliHexURLGrab(object):
             'Accept-Encoding': 'gzip',
         }
         self.average_deque = collections.deque(maxlen=100)
-        self.miss_count = 0
 
     def new_shortcode(self):
         while True:
@@ -83,6 +82,10 @@ class VisibliHexURLGrab(object):
                 self.http_client.close()
                 time.sleep(120)
                 continue
+            except UnexpectedResult as e:
+                _logger.warn('Unexpected result %s', e)
+                self.throttle(None, force=True)
+                continue
             self.session_count += 1
             t = random.triangular(0, self.sleep_time_max, 0)
 
@@ -106,20 +109,14 @@ class VisibliHexURLGrab(object):
 
         response = self.http_client.getresponse()
 
-        try:
-            url = self.read_response(response)
-        except UnexpectedResult as e:
-            _logger.warn('Unexpected result %s', e)
+        url = self.read_response(response)
+        if not url:
+            self.add_no_url(shortcode)
         else:
-            if not url:
-                self.add_no_url(shortcode)
-                self.miss_count += 1
-            else:
-                self.add_url(shortcode, url)
-                self.miss_count = 0
+            self.add_url(shortcode, url)
 
-            _logger.info('%s->%s...', shortcode_str,
-                url[:30] if url else '(none)')
+        _logger.info('%s->%s...', shortcode_str,
+            url[:30] if url else '(none)')
 
         self.throttle(response.status)
 
@@ -147,14 +144,21 @@ class VisibliHexURLGrab(object):
 
             return url
         elif response.status == 302:
+            location = response.getheader('Location')
+
+            if location and 'sharedby' not in location:
+                raise UnexpectedResult(
+                    'Weird 302 redirect to {}'.format(location))
+            elif not location:
+                raise UnexpectedResult('No redirect location')
+
             return
         else:
             raise UnexpectedResult('Unexpected status {}'.format(
                 response.status))
 
-    def throttle(self, status_code):
-        if self.miss_count > 2 or \
-        400 <= status_code <= 499 or 500 <= status_code <= 999:
+    def throttle(self, status_code, force=False):
+        if force or 400 <= status_code <= 499 or 500 <= status_code <= 999:
             _logger.info('Throttle %d seconds', self.throttle_time)
             time.sleep(self.throttle_time)
 
