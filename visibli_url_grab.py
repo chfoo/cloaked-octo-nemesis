@@ -47,6 +47,7 @@ class VisibliHexURLGrab(object):
             'Accept-Encoding': 'gzip',
         }
         self.average_deque = collections.deque(maxlen=100)
+        self.miss_count = 0
 
     def new_shortcode(self):
         while True:
@@ -112,8 +113,10 @@ class VisibliHexURLGrab(object):
         else:
             if not url:
                 self.add_no_url(shortcode)
+                self.miss_count += 1
             else:
                 self.add_url(shortcode, url)
+                self.miss_count = 0
 
             _logger.info('%s->%s...', shortcode_str,
                 url[:30] if url else '(none)')
@@ -150,7 +153,8 @@ class VisibliHexURLGrab(object):
                 response.status))
 
     def throttle(self, status_code):
-        if 400 <= status_code <= 499 or 500 <= status_code <= 999:
+        if self.miss_count > 2 or \
+        400 <= status_code <= 499 or 500 <= status_code <= 999:
             _logger.info('Throttle %d seconds', self.throttle_time)
             time.sleep(self.throttle_time)
 
