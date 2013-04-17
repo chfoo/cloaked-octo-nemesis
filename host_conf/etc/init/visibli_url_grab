@@ -1,0 +1,5 @@
+start on (local-filesystems and net-device-up IFACE!=lo)
+stop on runlevel [016]
+chdir /tmp/
+setuid USERNAME
+exec python3 /home/USERNAME/cloaked-octo-nemesis/visibli_url_grab.py --quiet --log-dir /tmp/ --database-dir LOCATION --reverse-sequential --sleep-max 0.5

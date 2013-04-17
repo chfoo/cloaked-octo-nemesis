@@ -1,0 +1,1 @@
+@daily rdiff-backup --v0 --remote-schema "ssh -q -C -p 22 %s rdiff-backup --server" USER@HOSTNAME::/DATABASE_PATH LOCAL_PATH

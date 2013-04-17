@@ -1,0 +1,1 @@
+@daily sqlite3 DATABASE_PATH .dump > DUMP_LOCATION
