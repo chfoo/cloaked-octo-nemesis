@@ -23,9 +23,26 @@ class UnexpectedResult(ValueError):
     pass
 
 
+class UserAgent(object):
+    def __init__(self, filename):
+        self.strings = []
+
+        with open(filename, 'rt') as f:
+            while True:
+                line = f.readline().strip()
+
+                if not line:
+                    break
+
+                self.strings.append(line)
+
+        self.strings = tuple(self.strings)
+        _logger.info('Initialized with %d user agents', len(self.strings))
+
+
 class VisibliHexURLGrab(object):
     def __init__(self, sequential=False, reverse_sequential=False,
-    sleep_time_max=2, database_dir=''):
+    sleep_time_max=2, database_dir='', user_agent_filename=None):
         self.db = sqlite3.connect(os.path.join(database_dir, 'visibli.db'))
         self.db.execute('PRAGMA journal_mode=WAL')
 
@@ -34,7 +51,7 @@ class VisibliHexURLGrab(object):
             (shortcode BLOB PRIMARY KEY, url TEXT, not_exist INTEGER)
             ''')
 
-        self.http_client = http.client.HTTPConnection('links.sharedby.co')
+        self.http_client = http.client.HTTPConnection('localhost', 8123)
         self.throttle_time = 1
         self.sequential = sequential
         self.reverse_sequential = reverse_sequential
@@ -42,9 +59,10 @@ class VisibliHexURLGrab(object):
         self.session_count = 0
         self.total_count = self.get_count() or 0
         self.sleep_time_max = sleep_time_max
+        self.user_agent = UserAgent(user_agent_filename)
         self.headers = {
-            'User-Agent': 'ZGDBGLQ (gzip)',
             'Accept-Encoding': 'gzip',
+            'Host': 'links.sharedby.co',
         }
         self.average_deque = collections.deque(maxlen=100)
 
@@ -74,6 +92,8 @@ class VisibliHexURLGrab(object):
                 return shortcode
 
     def run(self):
+        self.check_proxy_tor()
+
         while True:
             try:
                 self.fetch_url()
@@ -101,11 +121,13 @@ class VisibliHexURLGrab(object):
         shortcode = self.new_shortcode()
 
         shortcode_str = base64.b16encode(shortcode).lower().decode()
-        path = '/links/{}'.format(shortcode_str)
+        path = 'http://links.sharedby.co/links/{}'.format(shortcode_str)
+        headers = self.get_headers()
 
         _logger.debug('Begin fetch URL %s', path)
+        _logger.debug('Headers %s', headers)
 
-        self.http_client.request('GET', path, headers=self.headers)
+        self.http_client.request('GET', path, headers=headers)
 
         response = self.http_client.getresponse()
 
@@ -119,6 +141,11 @@ class VisibliHexURLGrab(object):
             url[:30] if url else '(none)')
 
         self.throttle(response.status)
+
+    def get_headers(self):
+        d = dict(self.headers)
+        d['User-Agent'] = random.choice(self.user_agent.strings)
+        return d
 
     def read_response(self, response):
         _logger.debug('Got status %s %s', response.status, response.reason)
@@ -146,7 +173,9 @@ class VisibliHexURLGrab(object):
         elif response.status == 302:
             location = response.getheader('Location')
 
-            if location and 'sharedby' not in location:
+#            if location and 'sharedby' not in location \
+#            and 'visibli' not in location:
+            if location and location.startswith('http://yahoo.com'):
                 raise UnexpectedResult(
                     'Weird 302 redirect to {}'.format(location))
             elif not location:
@@ -197,6 +226,24 @@ class VisibliHexURLGrab(object):
 
         return avg
 
+    def check_proxy_tor(self):
+        self.http_client.request('GET', 'http://check.torproject.org/',
+            headers={'Host': 'check.torproject.org'})
+
+        response = self.http_client.getresponse()
+        data = response.read()
+        _logger.debug('Check proxy got data=%s', data.decode())
+
+        if response.status != 200:
+            raise UnexpectedResult('Check tor page returned %d',
+                response.status)
+
+        if b'Congratulations. Your browser is configured to use Tor.' \
+        not in data:
+            raise UnexpectedResult('Not configured to use tor')
+
+        _logger.info('Using tor proxy')
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--sequential', action='store_true')
@@ -205,6 +252,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--quiet', action='store_true')
     arg_parser.add_argument('--database-dir', default=os.getcwd())
     arg_parser.add_argument('--log-dir', default=os.getcwd())
+    arg_parser.add_argument('--user-agent-file',
+        default=os.path.join(os.getcwd(), 'user-agents.txt'))
     args = arg_parser.parse_args()
 
     root_logger = logging.getLogger()
@@ -228,5 +277,6 @@ if __name__ == '__main__':
     o = VisibliHexURLGrab(sequential=args.sequential,
         reverse_sequential=args.reverse_sequential,
         database_dir=args.database_dir,
-        sleep_time_max=args.sleep_max)
+        sleep_time_max=args.sleep_max,
+        user_agent_filename=args.user_agent_file)
     o.run()
