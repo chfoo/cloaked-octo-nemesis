@@ -11,9 +11,11 @@ import logging
 import logging.handlers
 import math
 import os
+import queue
 import random
 import re
 import sqlite3
+import threading
 import time
 
 
@@ -58,9 +60,39 @@ class AbsSineyRateFunc(object):
         return y
 
 
+class HTTPClientProcessor(threading.Thread):
+    def __init__(self, request_queue, response_queue, host, port):
+        threading.Thread.__init__(self)
+        self.daemon = True
+        self._request_queue = request_queue
+        self._response_queue = response_queue
+        self._http_client = http.client.HTTPConnection(host, port)
+
+        self.start()
+
+    def run(self):
+        while True:
+            path, headers, shortcode = self._request_queue.get()
+
+            try:
+                _logger.debug('Get %s %s', path, headers)
+                self._http_client.request('GET', path, headers=headers)
+                response = self._http_client.getresponse()
+            except http.client.HTTPException:
+                _logger.exception('Got an http error.')
+                self._http_client.close()
+                time.sleep(120)
+            else:
+                _logger.debug('Got response %s %s',
+                    response.status, response.reason)
+                data = response.read()
+                self._response_queue.put((response, data, shortcode))
+
+
 class VisibliHexURLGrab(object):
     def __init__(self, sequential=False, reverse_sequential=False,
-    avg_items_per_sec=0.5, database_dir='', user_agent_filename=None):
+    avg_items_per_sec=0.5, database_dir='', user_agent_filename=None,
+    http_client_threads=2):
         self.db = sqlite3.connect(os.path.join(database_dir, 'visibli.db'))
         self.db.execute('PRAGMA journal_mode=WAL')
 
@@ -69,7 +101,11 @@ class VisibliHexURLGrab(object):
             (shortcode BLOB PRIMARY KEY, url TEXT, not_exist INTEGER)
             ''')
 
-        self.http_client = http.client.HTTPConnection('localhost', 8123)
+        self.host = 'localhost'
+        self.port = 8123
+        self.request_queue = queue.Queue(maxsize=1)
+        self.response_queue = queue.Queue(maxsize=10)
+        self.http_clients = self.new_clients(http_client_threads)
         self.throttle_time = 1
         self.sequential = sequential
         self.reverse_sequential = reverse_sequential
@@ -84,6 +120,11 @@ class VisibliHexURLGrab(object):
         self.average_deque = collections.deque(maxlen=100)
         self.rate_func = AbsSineyRateFunc(avg_items_per_sec)
         self.miss_count = 0
+
+    def new_clients(self, http_client_threads=2):
+        return [HTTPClientProcessor(self.request_queue, self.response_queue,
+            self.host, self.port)
+            for dummy in range(http_client_threads)]
 
     def new_shortcode(self):
         while True:
@@ -114,66 +155,68 @@ class VisibliHexURLGrab(object):
         self.check_proxy_tor()
 
         while True:
-            try:
-                self.fetch_url()
-            except http.client.HTTPException:
-                _logger.exception('Got an http error.')
-                self.http_client.close()
-                time.sleep(120)
-                continue
-            except UnexpectedResult as e:
-                _logger.warn('Unexpected result %s', e)
-                self.throttle(None, force=True)
-                continue
-            self.session_count += 1
-            t = self.rate_func.get()
+            self.read_responses()
+
+            shortcode = self.new_shortcode()
+            shortcode_str = base64.b16encode(shortcode).lower().decode()
+            path = 'http://links.sharedby.co/links/{}'.format(shortcode_str)
+            headers = self.get_headers()
+
+            while True:
+                try:
+                    self.request_queue.put_nowait((path, headers, shortcode))
+                except queue.Full:
+                    self.read_responses()
+                else:
+                    break
 
             if self.session_count % 10 == 0:
                 _logger.info('Session={}, total={}, {:.3f} u/s'.format(
                     self.session_count, self.session_count + self.total_count,
                     self.calc_avg()))
 
+            t = self.rate_func.get()
+
             _logger.debug('Sleep {:.3f}'.format(t))
             time.sleep(t)
-
-    def fetch_url(self):
-        shortcode = self.new_shortcode()
-
-        shortcode_str = base64.b16encode(shortcode).lower().decode()
-        path = 'http://links.sharedby.co/links/{}'.format(shortcode_str)
-        headers = self.get_headers()
-
-        _logger.debug('Begin fetch URL %s', path)
-        _logger.debug('Headers %s', headers)
-
-        self.http_client.request('GET', path, headers=headers)
-
-        response = self.http_client.getresponse()
-
-        url = self.read_response(response)
-        if not url:
-            self.add_no_url(shortcode)
-            self.miss_count += 1
-        else:
-            self.add_url(shortcode, url)
-            self.miss_count = 0
-
-        _logger.info('%s->%s...', shortcode_str,
-            url[:30] if url else '(none)')
-
-        self.throttle(response.status)
 
     def get_headers(self):
         d = dict(self.headers)
         d['User-Agent'] = random.choice(self.user_agent.strings)
         return d
 
-    def read_response(self, response):
-        _logger.debug('Got status %s %s', response.status, response.reason)
+    def read_responses(self):
+        while True:
+            try:
+                response, data, shortcode = self.response_queue.get(block=True,
+                    timeout=0.1)
+            except queue.Empty:
+                break
 
-        data = response.read()
-        assert isinstance(data, bytes)
+            self.session_count += 1
 
+            try:
+                url = self.read_response(response, data)
+            except UnexpectedResult as e:
+                _logger.warn('Unexpected result %s', e)
+                self.throttle(None, force=True)
+
+            url = self.read_response(response, data)
+            if not url:
+                self.add_no_url(shortcode)
+                self.miss_count += 1
+            else:
+                self.add_url(shortcode, url)
+                self.miss_count = 0
+
+            shortcode_str = base64.b16encode(shortcode).lower().decode()
+
+            _logger.info('%s->%s...', shortcode_str,
+                url[:30] if url else '(none)')
+
+            self.throttle(response.status)
+
+    def read_response(self, response, data):
         if response.getheader('Content-Encoding') == 'gzip':
             _logger.debug('Got gzip data')
             data = gzip.decompress(data)
@@ -249,10 +292,11 @@ class VisibliHexURLGrab(object):
         return avg
 
     def check_proxy_tor(self):
-        self.http_client.request('GET', 'http://check.torproject.org/',
+        http_client = http.client.HTTPConnection(self.host, self.port)
+        http_client.request('GET', 'http://check.torproject.org/',
             headers={'Host': 'check.torproject.org'})
 
-        response = self.http_client.getresponse()
+        response = http_client.getresponse()
         data = response.read()
         _logger.debug('Check proxy got data=%s', data.decode())
 
@@ -276,6 +320,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--log-dir', default=os.getcwd())
     arg_parser.add_argument('--user-agent-file',
         default=os.path.join(os.getcwd(), 'user-agents.txt'))
+    arg_parser.add_argument('--threads', type=int, default=2)
     args = arg_parser.parse_args()
 
     root_logger = logging.getLogger()
@@ -300,5 +345,6 @@ if __name__ == '__main__':
         reverse_sequential=args.reverse_sequential,
         database_dir=args.database_dir,
         avg_items_per_sec=args.average_rate,
-        user_agent_filename=args.user_agent_file)
+        user_agent_filename=args.user_agent_file,
+        http_client_threads=args.threads)
     o.run()
