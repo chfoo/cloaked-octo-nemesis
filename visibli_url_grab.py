@@ -9,6 +9,7 @@ import html.parser
 import http.client
 import logging
 import logging.handlers
+import math
 import os
 import random
 import re
@@ -40,9 +41,26 @@ class UserAgent(object):
         _logger.info('Initialized with %d user agents', len(self.strings))
 
 
+class AbsSineyRateFunc(object):
+    def __init__(self, avg_rate=1.0):
+        self._avg_rate = avg_rate
+        self._amplitude = 1.0 / self._avg_rate * 5.6
+        self._x = 1.0
+
+    def get(self):
+        y = abs(self._amplitude * math.sin(self._x) * math.sin(self._x ** 2)
+            / self._x)
+        self._x += 0.05
+
+        if self._x > 2 * math.pi:
+            self._x = 1.0
+
+        return y
+
+
 class VisibliHexURLGrab(object):
     def __init__(self, sequential=False, reverse_sequential=False,
-    sleep_time_max=2, database_dir='', user_agent_filename=None):
+    avg_items_per_sec=0.5, database_dir='', user_agent_filename=None):
         self.db = sqlite3.connect(os.path.join(database_dir, 'visibli.db'))
         self.db.execute('PRAGMA journal_mode=WAL')
 
@@ -58,13 +76,14 @@ class VisibliHexURLGrab(object):
         self.seq_num = 0xffffff if self.reverse_sequential else 0
         self.session_count = 0
         self.total_count = self.get_count() or 0
-        self.sleep_time_max = sleep_time_max
         self.user_agent = UserAgent(user_agent_filename)
         self.headers = {
             'Accept-Encoding': 'gzip',
             'Host': 'links.sharedby.co',
         }
         self.average_deque = collections.deque(maxlen=100)
+        self.rate_func = AbsSineyRateFunc(avg_items_per_sec)
+        self.miss_count = 0
 
     def new_shortcode(self):
         while True:
@@ -107,7 +126,7 @@ class VisibliHexURLGrab(object):
                 self.throttle(None, force=True)
                 continue
             self.session_count += 1
-            t = random.triangular(0, self.sleep_time_max, 0)
+            t = self.rate_func.get()
 
             if self.session_count % 10 == 0:
                 _logger.info('Session={}, total={}, {:.3f} u/s'.format(
@@ -134,8 +153,10 @@ class VisibliHexURLGrab(object):
         url = self.read_response(response)
         if not url:
             self.add_no_url(shortcode)
+            self.miss_count += 1
         else:
             self.add_url(shortcode, url)
+            self.miss_count = 0
 
         _logger.info('%s->%s...', shortcode_str,
             url[:30] if url else '(none)')
@@ -187,7 +208,8 @@ class VisibliHexURLGrab(object):
                 response.status))
 
     def throttle(self, status_code, force=False):
-        if force or 400 <= status_code <= 499 or 500 <= status_code <= 999:
+        if force or 400 <= status_code <= 499 or 500 <= status_code <= 999 \
+        or self.miss_count > 2:
             _logger.info('Throttle %d seconds', self.throttle_time)
             time.sleep(self.throttle_time)
 
@@ -248,7 +270,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--sequential', action='store_true')
     arg_parser.add_argument('--reverse-sequential', action='store_true')
-    arg_parser.add_argument('--sleep-max', type=float, default=2.0)
+    arg_parser.add_argument('--average-rate', type=float, default=1.0)
     arg_parser.add_argument('--quiet', action='store_true')
     arg_parser.add_argument('--database-dir', default=os.getcwd())
     arg_parser.add_argument('--log-dir', default=os.getcwd())
@@ -277,6 +299,6 @@ if __name__ == '__main__':
     o = VisibliHexURLGrab(sequential=args.sequential,
         reverse_sequential=args.reverse_sequential,
         database_dir=args.database_dir,
-        sleep_time_max=args.sleep_max,
+        avg_items_per_sec=args.average_rate,
         user_agent_filename=args.user_agent_file)
     o.run()
