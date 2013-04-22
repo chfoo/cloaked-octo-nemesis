@@ -200,8 +200,8 @@ class VisibliHexURLGrab(object):
             except UnexpectedResult as e:
                 _logger.warn('Unexpected result %s', e)
                 self.throttle(None, force=True)
+                continue
 
-            url = self.read_response(response, data)
             if not url:
                 self.add_no_url(shortcode)
                 self.miss_count += 1
