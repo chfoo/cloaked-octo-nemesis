@@ -185,11 +185,11 @@ class VisibliHexURLGrab(object):
         d['User-Agent'] = random.choice(self.user_agent.strings)
         return d
 
-    def read_responses(self, timeout=0.1):
+    def read_responses(self):
         while True:
             try:
                 response, data, shortcode = self.response_queue.get(block=True,
-                    timeout=timeout)
+                    timeout=0.05)
             except queue.Empty:
                 break
 
