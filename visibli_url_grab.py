@@ -155,8 +155,6 @@ class VisibliHexURLGrab(object):
         self.check_proxy_tor()
 
         while True:
-            self.read_responses()
-
             shortcode = self.new_shortcode()
             shortcode_str = base64.b16encode(shortcode).lower().decode()
             path = 'http://links.sharedby.co/links/{}'.format(shortcode_str)
@@ -180,16 +178,18 @@ class VisibliHexURLGrab(object):
             _logger.debug('Sleep {:.3f}'.format(t))
             time.sleep(t)
 
+            self.read_responses()
+
     def get_headers(self):
         d = dict(self.headers)
         d['User-Agent'] = random.choice(self.user_agent.strings)
         return d
 
-    def read_responses(self):
+    def read_responses(self, timeout=0.1):
         while True:
             try:
                 response, data, shortcode = self.response_queue.get(block=True,
-                    timeout=0.1)
+                    timeout=timeout)
             except queue.Empty:
                 break
 
