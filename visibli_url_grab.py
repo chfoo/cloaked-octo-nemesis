@@ -17,6 +17,7 @@ import re
 import sqlite3
 import threading
 import time
+import atexit
 
 
 _logger = logging.getLogger(__name__)
@@ -89,11 +90,49 @@ class HTTPClientProcessor(threading.Thread):
                 self._response_queue.put((response, data, shortcode))
 
 
+class InsertQueue(threading.Thread):
+    def __init__(self, db_path):
+        threading.Thread.__init__(self)
+        self.daemon = True
+        self._queue = queue.Queue(maxsize=100)
+        self._event = threading.Event()
+        self._running = True
+        self._db_path = db_path
+
+        self.start()
+
+    def run(self):
+        self._db = sqlite3.connect(self._db_path)
+
+        while self._running:
+            self._process()
+            self._event.wait(timeout=10)
+
+    def _process(self):
+        with self._db:
+            while True:
+                try:
+                    statement, values = self._queue.get_nowait()
+                except queue.Empty:
+                    break
+
+                _logger.debug('Executing statement')
+                self._db.execute(statement, values)
+
+    def stop(self):
+        self._running = False
+        self._event.set()
+
+    def add(self, statement, values):
+        self._queue.put((statement, values))
+
+
 class VisibliHexURLGrab(object):
     def __init__(self, sequential=False, reverse_sequential=False,
     avg_items_per_sec=0.5, database_dir='', user_agent_filename=None,
     http_client_threads=2):
-        self.db = sqlite3.connect(os.path.join(database_dir, 'visibli.db'))
+        db_path = os.path.join(database_dir, 'visibli.db')
+        self.db = sqlite3.connect(db_path)
         self.db.execute('PRAGMA journal_mode=WAL')
 
         with self.db:
@@ -120,6 +159,9 @@ class VisibliHexURLGrab(object):
         self.average_deque = collections.deque(maxlen=100)
         self.rate_func = AbsSineyRateFunc(avg_items_per_sec)
         self.miss_count = 0
+        self.insert_queue = InsertQueue(db_path)
+
+        atexit.register(self.insert_queue.stop)
 
     def new_clients(self, http_client_threads=2):
         return [HTTPClientProcessor(self.request_queue, self.response_queue,
@@ -155,6 +197,9 @@ class VisibliHexURLGrab(object):
         self.check_proxy_tor()
 
         while True:
+            if not self.insert_queue.is_alive():
+                raise Exception('Insert queue died!')
+
             shortcode = self.new_shortcode()
             shortcode_str = base64.b16encode(shortcode).lower().decode()
             path = 'http://links.sharedby.co/links/{}'.format(shortcode_str)
@@ -179,6 +224,8 @@ class VisibliHexURLGrab(object):
             time.sleep(t)
 
             self.read_responses()
+
+        self.insert_queue.stop()
 
     def get_headers(self):
         d = dict(self.headers)
@@ -265,15 +312,13 @@ class VisibliHexURLGrab(object):
 
     def add_url(self, shortcode, url):
         _logger.debug('Insert %s %s', shortcode, url)
-        with self.db:
-            self.db.execute('INSERT INTO visibli_hex VALUES (?, ?, ?)',
-                [shortcode, url, None])
+        self.insert_queue.add('INSERT INTO visibli_hex VALUES (?, ?, ?)',
+            [shortcode, url, None])
 
     def add_no_url(self, shortcode):
         _logger.debug('Mark no url %s', shortcode)
-        with self.db:
-            self.db.execute('INSERT INTO visibli_hex VALUES (?, ?, ?)',
-                [shortcode, None, 1])
+        self.insert_queue.add('INSERT INTO visibli_hex VALUES (?, ?, ?)',
+            [shortcode, None, 1])
 
     def get_count(self):
         for row in self.db.execute('SELECT COUNT(ROWID) FROM visibli_hex '
