@@ -3,10 +3,15 @@
 # Licensed under GPLv3. See COPYING.txt for details.
 import sqlite3
 import base64
+import argparse
 
 
 def main():
-    db = sqlite3.connect('visibli.db')
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('database')
+    args = arg_parser.parse_args()
+
+    db = sqlite3.connect(args.database)
 
     for row in db.execute('SELECT shortcode, url FROM visibli_hex '
     'WHERE URL IS NOT NULL ORDER BY shortcode ASC'):
