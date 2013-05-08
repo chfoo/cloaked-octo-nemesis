@@ -312,12 +312,12 @@ class VisibliHexURLGrab(object):
 
     def add_url(self, shortcode, url):
         _logger.debug('Insert %s %s', shortcode, url)
-        self.insert_queue.add('INSERT INTO visibli_hex VALUES (?, ?, ?)',
+        self.insert_queue.add('INSERT OR IGNORE INTO visibli_hex VALUES (?, ?, ?)',
             [shortcode, url, None])
 
     def add_no_url(self, shortcode):
         _logger.debug('Mark no url %s', shortcode)
-        self.insert_queue.add('INSERT INTO visibli_hex VALUES (?, ?, ?)',
+        self.insert_queue.add('INSERT OR IGNORE INTO visibli_hex VALUES (?, ?, ?)',
             [shortcode, None, 1])
 
     def get_count(self):
