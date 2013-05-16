@@ -132,6 +132,7 @@ class VisibliHexURLGrab(object):
     avg_items_per_sec=0.5, database_dir='', user_agent_filename=None,
     http_client_threads=2):
         db_path = os.path.join(database_dir, 'visibli.db')
+        self.database_dir = database_dir
         self.db = sqlite3.connect(db_path)
         self.db.execute('PRAGMA journal_mode=WAL')
 
@@ -241,11 +242,18 @@ class VisibliHexURLGrab(object):
                 break
 
             self.session_count += 1
+            shortcode_str = base64.b16encode(shortcode).lower().decode()
 
             try:
                 url = self.read_response(response, data)
             except UnexpectedResult as e:
                 _logger.warn('Unexpected result %s', e)
+
+                try:
+                    self.write_report(e, shortcode_str, response, data)
+                except:
+                    _logger.exception('Error writing report')
+
                 self.throttle(None, force=True)
                 continue
 
@@ -255,8 +263,6 @@ class VisibliHexURLGrab(object):
             else:
                 self.add_url(shortcode, url)
                 self.miss_count = 0
-
-            shortcode_str = base64.b16encode(shortcode).lower().decode()
 
             _logger.info('%s->%s...', shortcode_str,
                 url[:30] if url else '(none)')
@@ -354,6 +360,27 @@ class VisibliHexURLGrab(object):
             raise UnexpectedResult('Not configured to use tor')
 
         _logger.info('Using tor proxy')
+
+    def write_report(self, error, shortcode_str, response, data):
+        path = os.path.join(self.database_dir,
+            'report_{:.04f}'.format(time.time()))
+        _logger.debug('Writing report to %s', path)
+
+        with open(path, 'wt') as f:
+            f.write('Error ')
+            f.write(str(error))
+            f.write('\n')
+            f.write('Code ')
+            f.write(shortcode_str)
+            f.write('\n')
+            f.write(str(response.status))
+            f.write(response.reason)
+            f.write('\n')
+            f.write(str(response.getheaders()))
+            f.write('\n\nData\n\n')
+            f.write(str(data))
+            f.write('\n\nEnd Report\n')
+
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
