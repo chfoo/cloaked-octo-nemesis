@@ -130,7 +130,7 @@ class InsertQueue(threading.Thread):
 class VisibliHexURLGrab(object):
     def __init__(self, sequential=False, reverse_sequential=False,
     avg_items_per_sec=0.5, database_dir='', user_agent_filename=None,
-    http_client_threads=2):
+    http_client_threads=2, save_reports=False):
         db_path = os.path.join(database_dir, 'visibli.db')
         self.database_dir = database_dir
         self.db = sqlite3.connect(db_path)
@@ -143,6 +143,7 @@ class VisibliHexURLGrab(object):
 
         self.host = 'localhost'
         self.port = 8123
+        self.save_reports = save_reports
         self.request_queue = queue.Queue(maxsize=1)
         self.response_queue = queue.Queue(maxsize=10)
         self.http_clients = self.new_clients(http_client_threads)
@@ -249,10 +250,11 @@ class VisibliHexURLGrab(object):
             except UnexpectedResult as e:
                 _logger.warn('Unexpected result %s', e)
 
-                try:
-                    self.write_report(e, shortcode_str, response, data)
-                except:
-                    _logger.exception('Error writing report')
+                if self.save_reports:
+                    try:
+                        self.write_report(e, shortcode_str, response, data)
+                    except:
+                        _logger.exception('Error writing report')
 
                 self.throttle(None, force=True)
                 continue
@@ -386,6 +388,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--sequential', action='store_true')
     arg_parser.add_argument('--reverse-sequential', action='store_true')
+    arg_parser.add_argument('--save-reports', action='store_true')
     arg_parser.add_argument('--average-rate', type=float, default=1.0)
     arg_parser.add_argument('--quiet', action='store_true')
     arg_parser.add_argument('--database-dir', default=os.getcwd())
@@ -418,5 +421,6 @@ if __name__ == '__main__':
         database_dir=args.database_dir,
         avg_items_per_sec=args.average_rate,
         user_agent_filename=args.user_agent_file,
-        http_client_threads=args.threads)
+        http_client_threads=args.threads,
+        save_reports=args.save_reports,)
     o.run()
