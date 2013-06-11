@@ -161,6 +161,7 @@ class VisibliHexURLGrab(object):
         self.average_deque = collections.deque(maxlen=100)
         self.rate_func = AbsSineyRateFunc(avg_items_per_sec)
         self.miss_count = 0
+        self.hit_count = 0
         self.insert_queue = InsertQueue(db_path)
 
         atexit.register(self.insert_queue.stop)
@@ -216,8 +217,9 @@ class VisibliHexURLGrab(object):
                     break
 
             if self.session_count % 10 == 0:
-                _logger.info('Session={}, total={}, {:.3f} u/s'.format(
-                    self.session_count, self.session_count + self.total_count,
+                _logger.info('Session={}, hit={}, total={}, {:.3f} u/s'.format(
+                    self.session_count, self.hit_count,
+                    self.session_count + self.total_count,
                     self.calc_avg()))
 
             t = self.rate_func.get()
@@ -265,6 +267,7 @@ class VisibliHexURLGrab(object):
             else:
                 self.add_url(shortcode, url)
                 self.miss_count = 0
+                self.hit_count += 1
 
             _logger.info('%s->%s...', shortcode_str,
                 url[:30] if url else '(none)')
