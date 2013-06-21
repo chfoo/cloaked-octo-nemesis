@@ -16,7 +16,9 @@ def main():
     for row in db.execute('SELECT shortcode, url FROM visibli_hex '
     'WHERE URL IS NOT NULL ORDER BY shortcode ASC'):
         shortcode, url = row
-        shortcode_str = base64.b16encode(shortcode).decode().lower()
+        shortcode_str = base64.b16encode(
+            shortcode.to_bytes(3, byteorder='big', signed=False)
+            ).decode().lower()
 
         if '\r' in url or '\n' in url:
             raise Exception('{} contains newline'.format(url))

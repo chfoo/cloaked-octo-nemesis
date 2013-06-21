@@ -138,7 +138,7 @@ class VisibliHexURLGrab(object):
 
         with self.db:
             self.db.execute('''CREATE TABLE IF NOT EXISTS visibli_hex
-            (shortcode BLOB PRIMARY KEY, url TEXT, not_exist INTEGER)
+            (shortcode INTEGER PRIMARY KEY ASC, url TEXT, not_exist INTEGER)
             ''')
 
         self.host = 'localhost'
@@ -171,6 +171,9 @@ class VisibliHexURLGrab(object):
             self.host, self.port)
             for dummy in range(http_client_threads)]
 
+    def shortcode_to_int(self, shortcode):
+        return int.from_bytes(shortcode, byteorder='big', signed=False)
+
     def new_shortcode(self):
         while True:
             if self.sequential or self.reverse_sequential:
@@ -191,7 +194,7 @@ class VisibliHexURLGrab(object):
                 shortcode = os.urandom(3)
 
             rows = self.db.execute('SELECT 1 FROM visibli_hex WHERE '
-                'shortcode = ? LIMIT 1', [shortcode])
+                'shortcode = ? LIMIT 1', [self.shortcode_to_int(shortcode)])
 
             if not len(list(rows)):
                 return shortcode
@@ -324,12 +327,12 @@ class VisibliHexURLGrab(object):
     def add_url(self, shortcode, url):
         _logger.debug('Insert %s %s', shortcode, url)
         self.insert_queue.add('INSERT OR IGNORE INTO visibli_hex VALUES (?, ?, ?)',
-            [shortcode, url, None])
+            [self.shortcode_to_int(shortcode), url, None])
 
     def add_no_url(self, shortcode):
         _logger.debug('Mark no url %s', shortcode)
         self.insert_queue.add('INSERT OR IGNORE INTO visibli_hex VALUES (?, ?, ?)',
-            [shortcode, None, 1])
+            [self.shortcode_to_int(shortcode), None, 1])
 
     def get_count(self):
         for row in self.db.execute('SELECT COUNT(ROWID) FROM visibli_hex '
