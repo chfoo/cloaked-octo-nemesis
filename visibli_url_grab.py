@@ -152,7 +152,8 @@ class VisibliHexURLGrab(object):
         self.reverse_sequential = reverse_sequential
         self.seq_num = 0xffffff if self.reverse_sequential else 0
         self.session_count = 0
-        self.total_count = self.get_count() or 0
+        #self.total_count = self.get_count() or 0
+        self.total_count = 0
         self.user_agent = UserAgent(user_agent_filename)
         self.headers = {
             'Accept-Encoding': 'gzip',
