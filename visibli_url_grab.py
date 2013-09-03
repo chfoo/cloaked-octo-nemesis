@@ -185,12 +185,12 @@ class VisibliHexURLGrab(object):
                     self.seq_num -= 1
 
                     if self.seq_num < 0:
-                        raise Exception('No more short codes')
+                        return None
                 else:
                     self.seq_num += 1
 
                     if self.seq_num > 0xffffff:
-                        raise Exception('No more short codes')
+                        return None
             else:
                 shortcode = os.urandom(3)
 
@@ -208,6 +208,10 @@ class VisibliHexURLGrab(object):
                 raise Exception('Insert queue died!')
 
             shortcode = self.new_shortcode()
+
+            if shortcode is None:
+                break
+
             shortcode_str = base64.b16encode(shortcode).lower().decode()
             path = 'http://links.sharedby.co/links/{}'.format(shortcode_str)
             headers = self.get_headers()
@@ -233,7 +237,11 @@ class VisibliHexURLGrab(object):
 
             self.read_responses()
 
+        _logger.info('Shutting down...')
+        time.sleep(30)
+        self.read_responses()
         self.insert_queue.stop()
+        self.insert_queue.join()
 
     def get_headers(self):
         d = dict(self.headers)
