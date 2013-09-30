@@ -1,6 +1,6 @@
 cloaked-octo-nemesis
 ====================
 
-Miscellaneous URL shortener scrapper/grabber scripts.
+Miscellaneous ArchiveTeam/URLTeam scrapper/grabber scripts.
 
-Visit http://urlte.am/ and http://archiveteam.org/index.php?title=URLTeam for details.
+Visit http://archiveteam.org/ and http://urlte.am/ for details.
