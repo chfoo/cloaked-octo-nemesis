@@ -93,6 +93,9 @@ class HTTPClientProcessor(threading.Thread):
                 data = response.read()
                 self._response_queue.put((response, data, shortcode))
 
+                # need to close for this script
+                self._http_client.close()
+
 
 class InsertQueue(threading.Thread):
     def __init__(self, db_path):
