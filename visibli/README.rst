@@ -3,7 +3,12 @@ Visibli
 
 Scripts to grab visibli/sharedby URL shortcodes.
 
-Requires Python 3.
+Requires
+
+* Python 3
+* HTTP proxy listening to 8123 proxied to Tor SOCKS proxy. 
+  * Polipo proxy http://www.pps.univ-paris-diderot.fr/~jch/software/polipo/tor.html
+* A text file ``user-agents.txt`` of web browser user agents
 
 See http://archiveteam.org/index.php?title=URLTeam for details.
 
