@@ -68,7 +68,7 @@ class HTTPClientProcessor(threading.Thread):
         self.daemon = True
         self._request_queue = request_queue
         self._response_queue = response_queue
-        # self._http_client = http.client.HTTPConnection(host, port)
+        self._http_client = http.client.HTTPConnection(host, port)
 
         self.start()
 
@@ -78,8 +78,6 @@ class HTTPClientProcessor(threading.Thread):
 
             try:
                 _logger.debug('Get %s %s', path, headers)
-                hostname = urllib.parse.urlparse(path).hostname
-                self._http_client = http.client.HTTPConnection(hostname, 80)
                 # self._http_client.request('GET', path, headers=headers)
                 self._http_client.request('GET', '/', headers=headers)
                 response = self._http_client.getresponse()
@@ -92,9 +90,6 @@ class HTTPClientProcessor(threading.Thread):
                     response.status, response.reason)
                 data = response.read()
                 self._response_queue.put((response, data, shortcode))
-
-                # need to close for this script
-                self._http_client.close()
 
 
 class InsertQueue(threading.Thread):
@@ -190,8 +185,8 @@ class URLGrabber(object):
             (shortcode INTEGER PRIMARY KEY ASC, url TEXT, not_exist INTEGER)
             ''')
 
-        self.host = ''  # not used in this script
-        self.port = None  # not used in this script
+        self.host = 'zapd.co'
+        self.port = 80
         self.save_reports = save_reports
         self.request_queue = queue.Queue(maxsize=1)
         self.response_queue = queue.Queue(maxsize=10)
@@ -265,6 +260,7 @@ class URLGrabber(object):
 
             while True:
                 try:
+                    headers['Host'] = urllib.parse.urlparse(path).hostname
                     self.request_queue.put_nowait((path, headers, shortcode))
                 except queue.Full:
                     self.read_responses()
