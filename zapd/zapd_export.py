@@ -1,9 +1,10 @@
 '''Export db to urlteam format'''
 # Copyright 2013 Christopher Foo <chris.foo@gmail.com>
 # Licensed under GPLv3. See COPYING.txt for details.
-import sqlite3
-import base64
 import argparse
+import base64
+import sqlite3
+import urllib.parse
 
 
 ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz'
@@ -49,13 +50,18 @@ def base36_decode(string, alphabet=ALPHABET):
     return num
 
 
-
 def main():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('database')
+    arg_parser.add_argument('--hostname', action='store_true',
+        help='Dump hostname names only.')
     args = arg_parser.parse_args()
 
     db = sqlite3.connect(args.database)
+
+    if args.hostname:
+        hostname_command(db)
+        return
 
     for row in db.execute('SELECT shortcode, url FROM zapd '
     'WHERE URL IS NOT NULL ORDER BY shortcode ASC'):
@@ -67,6 +73,25 @@ def main():
             raise Exception('{} contains newline'.format(url))
 
         print('{}|{}'.format(shortcode_str, url))
+
+
+def hostname_command(db):
+    hostnames = set()
+    for row in db.execute('SELECT shortcode, url FROM zapd '
+    'WHERE URL IS NOT NULL ORDER BY shortcode ASC'):
+        shortcode, url = row
+        url = url.encode('raw_unicode_escape').decode('utf-8')
+
+        if '\r' in url or '\n' in url:
+            raise Exception('{} contains newline'.format(url))
+
+        hostname = urllib.parse.urlparse(url).hostname
+
+        hostnames.add(hostname)
+
+    for hostname in sorted(hostnames):
+        print(hostname)
+
 
 if __name__ == '__main__':
     main()
