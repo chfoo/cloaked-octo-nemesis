@@ -347,7 +347,7 @@ class URLGrabber(object):
 #         or self.miss_count > 2:
         if force or (400 <= status_code <= 499 and status_code != 404) \
         or 500 <= status_code <= 999 \
-        or self.miss_count > 5000:
+        or self.miss_count > 50000:
             _logger.info('Throttle %d seconds', self.throttle_time)
             _logger.debug('Miss count %d, status_code %s, force=%s',
                 self.miss_count, status_code, force)
