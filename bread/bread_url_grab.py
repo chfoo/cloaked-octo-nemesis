@@ -359,7 +359,7 @@ class BreadURLGrab(object):
         if response.status == 302:
             url = response.getheader('Location')
             return url
-        elif response.status == 404:
+        elif response.status in (204, 404):
             return
         else:
             raise UnexpectedResult('Unexpected status {}'.format(
