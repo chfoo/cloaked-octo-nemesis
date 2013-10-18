@@ -88,6 +88,7 @@ class HTTPClientProcessor(threading.Thread):
                 _logger.debug('Got response %s %s',
                     response.status, response.reason)
                 data = response.read()
+                _logger.debug('Read %s bytes', len(data))
                 self._response_queue.put((response, data, shortcode))
 
 
@@ -185,14 +186,19 @@ class BreadURLGrab(object):
             (shortcode INTEGER PRIMARY KEY ASC, url TEXT, not_exist INTEGER)
             ''')
 
-        # self.host = 'localhost'
-        # self.port = 8123
         self.host = 'bre.ad'
         self.port = 80
+        self.tor_host = 'localhost'
+        self.tor_port = 8118
         self.save_reports = save_reports
         self.request_queue = queue.Queue(maxsize=1)
+        self.tor_request_queue = queue.Queue(maxsize=1)
         self.response_queue = queue.Queue(maxsize=10)
+
+        # Adjust for tor if needed
         self.http_clients = self.new_clients(http_client_threads)
+        self.http_tor_clients = self.new_tor_clients(0)
+
         self.throttle_time = 1
         self.sequential = sequential
         self.reverse_sequential = reverse_sequential
@@ -227,6 +233,14 @@ class BreadURLGrab(object):
     def new_clients(self, http_client_threads=2):
         return [HTTPClientProcessor(self.request_queue, self.response_queue,
             self.host, self.port)
+            for dummy in range(http_client_threads)]
+
+    def new_tor_clients(self, http_client_threads=2):
+        return [HTTPClientProcessor(
+            self.tor_request_queue,
+            self.response_queue,
+            self.tor_host,
+            self.tor_port)
             for dummy in range(http_client_threads)]
 
     def shortcode_to_int(self, shortcode):
@@ -266,7 +280,8 @@ class BreadURLGrab(object):
                 return shortcode
 
     def run(self):
-        # self.check_proxy_tor()
+        # Adjust for tor if needed
+#         self.check_proxy_tor()
 
         while True:
             if not self.insert_queue.is_alive():
@@ -281,10 +296,17 @@ class BreadURLGrab(object):
                 random.randint(1000, 10000))
             headers = self.get_headers()
 
-            path = urllib.parse.urlparse(url).path
+            # Adjust for tor if needed
+            if False:  # random.randint(1, 4) == 1:
+                request_queue = self.tor_request_queue
+                path = url
+            else:
+                request_queue = self.request_queue
+                path = urllib.parse.urlparse(url).path
+
             while True:
                 try:
-                    self.request_queue.put_nowait((path, headers, shortcode))
+                    request_queue.put_nowait((path, headers, shortcode))
                 except queue.Full:
                     self.read_responses()
                 else:
@@ -368,7 +390,7 @@ class BreadURLGrab(object):
     def throttle(self, status_code, force=False):
         if force or (400 <= status_code <= 499 and status_code != 404) \
         or 500 <= status_code <= 999 \
-        or self.miss_count > 50000:
+        or self.miss_count > 10000000:
             _logger.info('Throttle %d seconds', self.throttle_time)
             time.sleep(self.throttle_time)
 
@@ -406,7 +428,7 @@ class BreadURLGrab(object):
         return avg
 
     def check_proxy_tor(self):
-        http_client = http.client.HTTPConnection(self.host, self.port)
+        http_client = http.client.HTTPConnection(self.tor_host, self.tor_port)
         http_client.request('GET', 'http://check.torproject.org/',
             headers={'Host': 'check.torproject.org'})
 
