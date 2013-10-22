@@ -13,7 +13,21 @@ Generic instructions
 * ``touch STOP`` to gracefully stop.
 
 
-Process
-+++++++
+Process A
++++++++++
 
 1. dopplr_places_grab.py
+
+TODO: grab assets, crawl travellers
+
+
+Process B
++++++++++
+
+TODO: grab reports
+
+
+Process C
++++++++++
+
+TODO: grab homepage and related matter
