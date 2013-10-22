@@ -8,7 +8,6 @@ Requires Python 2 and Wget 1.14.
 Generic instructions
 ++++++++++++++++++++
 
-* Create the ``warc`` and ``log`` directories.
 * See additional instructions inside each file
 * ``touch STOP`` to gracefully stop.
 
@@ -24,7 +23,7 @@ TODO: grab assets, crawl travellers
 Process B
 +++++++++
 
-TODO: grab reports
+1. dopplr_reports_grab.py
 
 
 Process C
