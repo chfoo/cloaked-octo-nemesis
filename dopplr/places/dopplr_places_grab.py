@@ -35,6 +35,7 @@ if __name__ == '__main__':
                 '--output-document', '/tmp/{}-wget.tmp'.format(instance_time),
                 '-e', 'robots=off',
                 '--timeout', '60', '--tries', '5', '--waitretry', '5', '--level', '25',
+                '--inet4-only',
                 '--recursive',
                 '--no-parent',
                 '--include', '/place/{}'.format(place),
