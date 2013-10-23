@@ -3,7 +3,7 @@ Dopplr
 
 Scripts to grab http://www.dopplr.com . See http://archiveteam.org/index.php?title=Dopplr for more details.
 
-Requires Python 2 and Wget 1.14.
+Requires Python 2 and Wget-Lua 1.14.
 
 Generic instructions
 ++++++++++++++++++++

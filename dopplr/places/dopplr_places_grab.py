@@ -28,16 +28,16 @@ if __name__ == '__main__':
             url = 'http://www.dopplr.com/place/{}'.format(place)
             print 'Fetch', url
             return_code = subprocess.call([
-                'wget', 
+                'wget-lua', 
                 '-U', "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.66 Safari/537.36",
                 '-o', 'log/{}-{}.log'.format(cur_time, place),
-                '--no-check-certificate', 
+                '--no-check-certificate',
+                '--truncate-output',
                 '--output-document', '/tmp/{}-wget.tmp'.format(instance_time),
                 '-e', 'robots=off',
                 '--timeout', '60', '--tries', '5', '--waitretry', '5', '--level', '25',
                 '--inet4-only',
                 '--recursive',
-                '--no-parent',
                 '--include', '/place/{}'.format(place),
                 '--page-requisites',
                 '--random-wait', '--wait', '0.1',
