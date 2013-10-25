@@ -96,7 +96,7 @@ class InsertQueue(threading.Thread):
     def __init__(self, db_path):
         threading.Thread.__init__(self)
         self.daemon = True
-        self._queue = queue.Queue(maxsize=100)
+        self._queue = queue.Queue(maxsize=1000)
         self._event = threading.Event()
         self._running = True
         self._db_path = db_path
@@ -191,9 +191,9 @@ class BreadURLGrab(object):
         self.tor_host = 'localhost'
         self.tor_port = 8118
         self.save_reports = save_reports
-        self.request_queue = queue.Queue(maxsize=1)
-        self.tor_request_queue = queue.Queue(maxsize=1)
-        self.response_queue = queue.Queue(maxsize=10)
+        self.request_queue = queue.Queue(maxsize=2)
+        self.tor_request_queue = queue.Queue(maxsize=2)
+        self.response_queue = queue.Queue(maxsize=25)
 
         # Adjust for tor if needed
         self.http_clients = self.new_clients(http_client_threads)
@@ -340,7 +340,7 @@ class BreadURLGrab(object):
         while True:
             try:
                 response, data, shortcode = self.response_queue.get(block=True,
-                    timeout=0.05)
+                    timeout=0.001)
             except queue.Empty:
                 break
 
