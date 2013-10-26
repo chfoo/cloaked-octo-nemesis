@@ -16,8 +16,8 @@ Process A
 +++++++++
 
 1. dopplr_places_grab.py
-
-TODO: grab assets, crawl travellers
+2. grep_travellers.sh
+3. dopplr_travellers_grab.py
 
 
 Process B
@@ -29,4 +29,5 @@ Process B
 Process C
 +++++++++
 
+TODO: grab assets
 TODO: grab homepage and related matter
