@@ -50,7 +50,7 @@ if __name__ == '__main__':
                 '--verbose', 
                 url])
             
-            if return_code not in (0, 4, 6, 8):
+            if return_code not in (0,):
                 raise Exception('Wget error {}'.format(return_code))
             
             time.sleep(1)
