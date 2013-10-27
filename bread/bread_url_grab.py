@@ -73,7 +73,7 @@ class HTTPClientProcessor(threading.Thread):
         self.start()
 
     def run(self):
-        connection_counter = 0
+        connection_time = time.time()
 
         while True:
             path, headers, shortcode = self._request_queue.get()
@@ -93,10 +93,9 @@ class HTTPClientProcessor(threading.Thread):
                 _logger.debug('Read %s bytes', len(data))
                 self._response_queue.put((response, data, shortcode))
 
-                connection_counter += 1
-
-                if connection_counter > 1000:
-                    connection_counter = 0
+                current_time = time.time()
+                if connection_time < current_time - 3600:
+                    connection_time = current_time
                     _logger.debug('Close connection.')
                     self._http_client.close()
 
