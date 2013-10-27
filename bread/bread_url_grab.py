@@ -97,6 +97,7 @@ class HTTPClientProcessor(threading.Thread):
 
                 if connection_counter > 1000:
                     connection_counter = 0
+                    _logger.debug('Close connection.')
                     self._http_client.close()
 
 
