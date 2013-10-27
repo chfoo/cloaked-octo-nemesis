@@ -73,6 +73,8 @@ class HTTPClientProcessor(threading.Thread):
         self.start()
 
     def run(self):
+        connection_counter = 0
+
         while True:
             path, headers, shortcode = self._request_queue.get()
 
@@ -90,6 +92,12 @@ class HTTPClientProcessor(threading.Thread):
                 data = response.read()
                 _logger.debug('Read %s bytes', len(data))
                 self._response_queue.put((response, data, shortcode))
+
+                connection_counter += 1
+
+                if connection_counter > 1000:
+                    connection_counter = 0
+                    self._http_client.close()
 
 
 class InsertQueue(threading.Thread):
@@ -293,7 +301,7 @@ class BreadURLGrab(object):
                 break
 
             url = 'http://bre.ad/{}/go/{}'.format(shortcode,
-                random.randint(1000, 10000))
+                random.randint(10000, 1000000))
             headers = self.get_headers()
 
             # Adjust for tor if needed
