@@ -74,6 +74,7 @@ class HTTPClientProcessor(threading.Thread):
 
     def run(self):
         connection_time = time.time()
+        expire_time = connection_time + 1800
 
         while True:
             path, headers, shortcode = self._request_queue.get()
@@ -93,11 +94,17 @@ class HTTPClientProcessor(threading.Thread):
                 _logger.debug('Read %s bytes', len(data))
                 self._response_queue.put((response, data, shortcode))
 
-                current_time = time.time()
-                if connection_time < current_time - 3600:
-                    connection_time = current_time
-                    _logger.debug('Close connection.')
-                    self._http_client.close()
+            current_time = time.time()
+
+            if expire_time < current_time:
+                connection_time = current_time
+                expire_time = current_time + 1800
+                _logger.debug('Close connection.')
+                self._http_client.close()
+            else:
+                _logger.debug(
+                    'Conn time {}, expire time {}, now time {}'.format(
+                    connection_time, expire_time, current_time))
 
 
 class InsertQueue(threading.Thread):
