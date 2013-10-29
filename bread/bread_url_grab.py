@@ -409,7 +409,7 @@ class BreadURLGrab(object):
             _logger.info('Throttle %d seconds', self.throttle_time)
             time.sleep(self.throttle_time)
 
-            self.throttle_time *= 2
+            self.throttle_time *= 1.2
             self.throttle_time = min(3600, self.throttle_time)
         else:
             self.throttle_time /= 2
