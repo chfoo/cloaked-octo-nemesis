@@ -11,16 +11,26 @@ from database import DB
 
 def main():
     db = DB()
-    start_page = 1
-    end_page = 3922
-    url = 'http://sandbox.yoyogames.com/browse?page={0}&sort=created_at'
-#     start_page = 1
-#     end_page = 524
-#     url = 'http://sandbox.yoyogames.com/browse?beta=1&page={0}&sort=created_at'
-#     start_page = 1
-#     end_page = 1008
-#     url = 'http://sandbox.yoyogames.com/browse?incomplete=1&page={0}&sort=created_at'
 
+    start_page = 1
+    end_page = 3955
+    url = 'http://sandbox.yoyogames.com/browse?page={0}&sort=created_at'
+    scrape(db, start_page, end_page, url)
+
+    start_page = 1
+    end_page = 528
+    url = 'http://sandbox.yoyogames.com/browse?beta=1&page={0}&sort=created_at'
+
+    scrape(db, start_page, end_page, url)
+
+    start_page = 1
+    end_page = 1015
+    url = 'http://sandbox.yoyogames.com/browse?incomplete=1&page={0}&sort=created_at'
+
+    scrape(db, start_page, end_page, url)
+
+
+def scrape(db, start_page, end_page, url):
     for page in range(start_page, end_page + 1):
         print('Fetching', page)
         response = requests.get(url.format(page),
