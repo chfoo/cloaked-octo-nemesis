@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="500"
+   height="500"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="quitpic.svg"
+   inkscape:export-filename="/home/chris/data-chris-aspire-5741/Documents/programming/visibli_grab/visibli_grab.git/misc/quitpic.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <title
+     id="title3852">QuitPic</title>
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="193.35149"
+     inkscape:cy="209.40961"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer3"
+     showgrid="false"
+     inkscape:window-width="1871"
+     inkscape:window-height="1056"
+     inkscape:window-x="49"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid3817"
+       empspacing="5"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>QuitPic</dc:title>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Christopher Foo</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by/3.0/" />
+        <dc:description>Dead bird logo from Quitter app from The Simpsons and broken camera logo from TwitPic.</dc:description>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="reference"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-552.36218)"
+     style="display:none"
+     sodipodi:insensitive="true">
+    <image
+       y="792.151"
+       x="-495.32187"
+       id="image3012"
+       xlink:href="file:///tmp/Quitter.png"
+       height="577.59955"
+       width="519.83966"
+       style="opacity:0.85467128"
+       transform="matrix(0.99435211,0.10613142,-0.10613142,0.99435211,0,0)" />
+    <image
+       y="1083.3622"
+       x="-46"
+       id="image3809"
+       xlink:href="file:///tmp/logo.png"
+       height="280.77499"
+       width="1021" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="quitter-bird">
+    <g
+       id="g3794"
+       transform="matrix(0.95946228,0,0,0.92428276,-29.165611,142.5763)">
+      <path
+         sodipodi:nodetypes="ccccccccszcssccccccscccccc"
+         inkscape:connector-curvature="0"
+         id="path3784"
+         d="m 207.8894,61.947349 c -49.05388,25.356241 -53.24303,55.086851 -61.16474,86.620581 -37.80187,5.86998 -64.243491,14.27874 -73.892661,44.54773 -1.310968,5.06085 -11.499937,2.43098 -13.925276,4.67726 1.080585,5.18269 3.568702,5.06367 5.597704,8.78462 -6.102726,0.89252 -13.885174,-1.96648 -16.471036,-0.48688 -0.199971,3.49503 16.63946,27.23622 16.266301,30.91875 -2.848033,6.51096 -7.9708,7.19427 -13.506946,10.63088 4.716903,4.67404 5.783835,0.42744 12.916649,4.99606 9.631723,6.16919 6.02172,15.1257 19.729205,27.45344 13.707485,12.32774 52.32666,22.68306 86.97413,26.87006 -3.21098,21.82585 -2.44021,41.34255 31.1127,45.25483 32.46787,3.78577 75.91438,-7.9752 88.38835,-8.13172 17.49412,-0.21953 38.42104,5.56134 67.44031,16.70539 -1.24312,-3.46519 -6.33001,-11.96348 -7.69496,-15.11116 2.51005,-1.02268 8.88726,-2.50349 12.2524,-4.52506 -4.05886,-3.78539 -27.29993,-9.45811 -40.65149,-12.30378 l 15.51112,-12.11183 -16.18662,-7.92051 c 23.79979,4.42063 52.74442,-4.64722 72.92038,-19.88738 27.08862,-20.46173 43.48623,-50.73199 38.53733,-91.92389 -20.34698,19.54832 -36.89489,49.85158 -67.52871,52.67946 -57.68822,-3.69825 -102.8686,-59.80153 -143.50346,-85.18492 0.5619,-13.55623 -0.242,-22.20432 -3.9283,-35.02323 -8.01984,27.56642 -22.27698,43.90572 -34.64823,63.63961 -13.43726,-44.42995 11.94117,-87.60778 25.45585,-131.168311 z"
+         style="fill:#55acee;fill-opacity:1;stroke:none" />
+      <path
+         sodipodi:nodetypes="cccccccssccc"
+         inkscape:connector-curvature="0"
+         id="path3786"
+         d="m 346.75,249.125 c 7.50262,-5.87382 6.04542,-14.1636 7.25,-21.875 -10.41865,-14.02513 -21.34278,-27.37629 -33.75,-38.75 5.33433,-4.60393 6.54106,-12.30355 8.25,-19.62652 -3.5893,-3.97552 -4.84473,-4.86665 -11.7981,-5.89861 -1.98205,8.09823 1.93109,16.47936 -6.45971,19.66422 -6.55795,-4.19274 -13.49192,-8.21313 -9.04504,-17.44975 -3.71232,-0.14394 -12.9989,2.19587 -15.42938,12.81066 -1.38252,6.03794 3.81116,11.37161 9.36611,13.37868 5.69397,2.0573 10.83134,3.61766 16.74004,3.95711 12.42626,6.88906 14.17793,20.90002 22.12608,31.41421 -1.45699,5.16667 -4.42244,10.33333 -7.5,15.5"
+         style="fill:#55acee;fill-opacity:1;stroke:none" />
+      <path
+         sodipodi:nodetypes="cccsccccccc"
+         inkscape:connector-curvature="0"
+         id="path3788"
+         d="m 301.25,230.5 c 11.37439,-3.33456 21.12241,-9.92185 28.5,-21.25 2.75021,-13.83323 9.70077,-27.00378 10.375,-41.875 -3.69537,-5.67417 -10.33424,-10.23669 -10.875,-18.75 -0.86241,-13.5771 10.22845,-12.55616 20.25,-10.25 -3.73894,11.29315 -0.70772,18.62088 4.875,20.875 3.92306,0.53107 7.95549,-2.62112 10.26914,-8.61674 2.93864,-0.88754 5.15219,-0.27842 8.23086,0.74174 0.46324,11.00322 -15.3846,16.30547 -20.875,23.875 -5.08147,12.74148 -6.04919,25.07159 -8,37.5 -7.78488,11.15895 -15.5649,22.34217 -24,30.25"
+         style="fill:#55acee;fill-opacity:1;stroke:none" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path3790"
+         d="m 130.45775,167.40184 9.34506,39.42584"
+         style="fill:none;stroke:#000000;stroke-width:8.4952;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:nodetypes="cc" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path3792"
+         d="m 116.07044,182.91808 38.07744,9.43432"
+         style="fill:none;stroke:#000000;stroke-width:8.4952;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:nodetypes="cc" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="twitpic-logo">
+    <g
+       id="g3821"
+       transform="matrix(0.84272092,0.20055798,-0.20055798,0.84272092,425.27579,-438.04445)">
+      <path
+         transform="translate(-48.790368,-21.213203)"
+         d="m 263.04373,684.55487 c 0,72.63752 -58.88434,131.52187 -131.52186,131.52187 C 58.884345,816.07674 0,757.19239 0,684.55487 0,611.91735 58.884345,553.033 131.52187,553.033 c 72.63752,0 131.52186,58.88435 131.52186,131.52187 z"
+         sodipodi:ry="131.52187"
+         sodipodi:rx="131.52187"
+         sodipodi:cy="684.55487"
+         sodipodi:cx="131.52187"
+         id="path3813"
+         style="fill:#55acee;fill-opacity:1;stroke:none"
+         sodipodi:type="arc" />
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path3815"
+         d="m 120,580 -75,0 0,30 -55,0 0,110 190,0 0,-110 -60,0 z"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+      <path
+         transform="translate(-6.7175144,-8.131728)"
+         d="m 131.86827,672.5 c 0,21.7425 -17.62577,39.36827 -39.36827,39.36827 -21.742496,0 -39.368271,-17.62577 -39.368271,-39.36827 0,-21.7425 17.625775,-39.36827 39.368271,-39.36827 21.7425,0 39.36827,17.62577 39.36827,39.36827 z"
+         sodipodi:ry="39.368271"
+         sodipodi:rx="39.368271"
+         sodipodi:cy="672.5"
+         sodipodi:cx="92.5"
+         id="path3819"
+         style="fill:none;stroke:#000000;stroke-width:15;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:type="arc" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:6.46116199;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         d="m 381.96681,102.50118 -8.35899,13.81873 7.67891,7.93009 -6.53673,9.5 15.89218,3 -5.98317,17.63909"
+         id="path3828"
+         inkscape:connector-curvature="0"
+         transform="matrix(1.390494,-0.33092174,0.33092174,1.390494,-491.09261,613.37916)"
+         sodipodi:nodetypes="cccccc" />
+      <path
+         style="fill:none;stroke:#55acee;stroke-width:6.46116199;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         d="m 305.82368,120.99076 14.14214,10.60661 9.54594,-3.18199 10.6066,10.96016"
+         id="path3832"
+         inkscape:connector-curvature="0"
+         transform="matrix(1.390494,-0.33092174,0.33092174,1.390494,-491.09261,613.37916)"
+         sodipodi:nodetypes="cccc" />
+      <path
+         style="fill:none;stroke:#55acee;stroke-width:9.2351293;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         d="m 150.31733,648.8857 7.32917,-19.40583 14.58419,0.16533 10.65236,-9.80755"
+         id="path3832-5"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cccc" />
+    </g>
+  </g>
+</svg>
